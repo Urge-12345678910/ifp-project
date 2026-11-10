@@ -1,0 +1,57 @@
+@page "/categories"
+@rendermode InteractiveServer
+@inject ICategoryService CategoryService
+
+<PageTitle>categories</PageTitle>
+
+<h3>categories</h3>
+
+<EditForm Model="newCategory" OnValidSubmit="Add" FormName="categoryForm" class="row g-2 mb-4">
+    <DataAnnotationsValidator />
+    <div class="col-md-6">
+        <InputText class="form-control" placeholder="Название" @bind-Value="newCategory.Name" />
+    </div>
+    <div class="col-md-3">
+        <InputText type="color" class="form-control form-control-color" @bind-Value="newCategory.Color" />
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary w-100" type="submit">add</button>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+<ul class="list-group">
+    @foreach (var c in categories)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+                <span class="badge me-2" style="background-color:@c.Color">&nbsp;</span>
+                @c.Name
+            </span>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(c.Id)">delete</button>
+        </li>
+    }
+</ul>
+
+@code {
+    private List<Category> categories = new();
+    private Category newCategory = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllAsync();
+    }
+
+    private async Task Add()
+    {
+        await CategoryService.AddAsync(newCategory);
+        newCategory = new Category();
+        categories = await CategoryService.GetAllAsync();
+    }
+
+    private async Task Delete(int id)
+    {
+        await CategoryService.DeleteAsync(id);
+        categories = await CategoryService.GetAllAsync();
+    }
+}

@@ -1,0 +1,46 @@
+@page "/statistics"
+@rendermode InteractiveServer
+@inject IExpenseService ExpenseService
+
+<PageTitle>Statistics</PageTitle>
+
+<h3>expenses by categories</h3>
+
+@if (totals is null)
+{
+    <p>loading...</p>
+}
+else if (totals.Count == 0)
+{
+    <p>no any date.</p>
+}
+else
+{
+    @foreach (var t in totals)
+    {
+        <div class="mb-3">
+            <div class="d-flex justify-content-between">
+                <span>@t.Name</span>
+                <span>@t.Total.ToString("N2")</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width:@Percent(t)%; background-color:@t.Color"></div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<CategoryTotal>? totals;
+
+    protected override async Task OnInitializedAsync()
+    {
+        totals = await ExpenseService.GetTotalsByCategoryAsync();
+    }
+
+    private int Percent(CategoryTotal t)
+    {
+        var max = totals!.Max(x => x.Total);
+        return max == 0 ? 0 : (int)(t.Total / max * 100);
+    }
+}

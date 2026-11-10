@@ -1,0 +1,78 @@
+@page "/expenses/add"
+@page "/expenses/edit/{Id:int}"
+@rendermode InteractiveServer
+@inject IExpenseService ExpenseService
+@inject ICategoryService CategoryService
+@inject NavigationManager Navigation
+
+<PageTitle>Расход</PageTitle>
+
+<h3>@(Id is null ? "Новый расход" : "Редактирование расхода")</h3>
+
+@if (model is null)
+{
+    <p>download...</p>
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="Save" FormName="expenseForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">name</label>
+            <InputText class="form-control" @bind-Value="model.Title" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">sum</label>
+            <InputNumber class="form-control" @bind-Value="model.Amount" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">date</label>
+            <InputDate class="form-control" @bind-Value="model.Date" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">category</label>
+            <InputSelect class="form-select" @bind-Value="model.CategoryId">
+                <option value="0">cancel...</option>
+                @foreach (var c in categories)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Заметка</label>
+            <InputTextArea class="form-control" @bind-Value="model.Note" />
+        </div>
+
+        <button class="btn btn-primary" type="submit">save</button>
+        <a class="btn btn-secondary" href="expenses">cancel</a>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private Expense? model;
+    private List<Category> categories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllAsync();
+        model = Id is null ? new Expense() : await ExpenseService.GetByIdAsync(Id.Value);
+
+        if (model is null)
+            Navigation.NavigateTo("expenses");
+    }
+
+    private async Task Save()
+    {
+        if (model!.Id == 0)
+            await ExpenseService.AddAsync(model);
+        else
+            await ExpenseService.UpdateAsync(model);
+
+        Navigation.NavigateTo("expenses");
+    }
+}

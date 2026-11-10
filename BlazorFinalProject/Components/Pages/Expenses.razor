@@ -1,0 +1,91 @@
+@page "/expenses"
+@rendermode InteractiveServer
+@inject IExpenseService ExpenseService
+@inject ICategoryService CategoryService
+
+<PageTitle>expenses</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>expenses</h3>
+    <a class="btn btn-primary" href="expenses/add">add</a>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input class="form-control" placeholder="Search by name"
+               @bind="search" @bind:event="oninput" @bind:after="Load" />
+    </div>
+    <div class="col-md-6">
+        <select class="form-select" @bind="categoryId" @bind:after="Load">
+            <option value="">All categories</option>
+            @foreach (var c in categories)
+            {
+                <option value="@c.Id">@c.Name</option>
+            }
+        </select>
+    </div>
+</div>
+
+@if (items is null)
+{
+    <p>Загрузка...</p>
+}
+else if (items.Count == 0)
+{
+    <p>no expenses.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>name</th>
+                    <th>categories</th>
+                    <th>sum</th>
+                    <th>date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in items)
+                {
+                    <tr>
+                        <td>@e.Title</td>
+                        <td>@e.Category?.Name</td>
+                        <td>@e.Amount.ToString("N2")</td>
+                        <td>@e.Date.ToShortDateString()</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="expenses/edit/@e.Id">change</a>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(e.Id)">delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<Expense>? items;
+    private List<Category> categories = new();
+    private string? search;
+    private int? categoryId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllAsync();
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        items = await ExpenseService.GetAllAsync(categoryId, search);
+    }
+
+    private async Task Delete(int id)
+    {
+        await ExpenseService.DeleteAsync(id);
+        await Load();
+    }
+}

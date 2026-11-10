@@ -1,3 +1,6 @@
+using BlazorFinalProject.Data;
+using BlazorFinalProject.Services;
+using Microsoft.EntityFrameworkCore;
 using BlazorFinalProject.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseSqlite("Data Source=expenses.db"));
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 

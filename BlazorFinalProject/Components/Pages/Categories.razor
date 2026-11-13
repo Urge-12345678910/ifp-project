@@ -5,7 +5,10 @@
 <PageTitle>categories</PageTitle>
 
 <h3>categories</h3>
-
+@if (error is not null)
+{
+    <div class="alert alert-danger">@error</div>
+}
 <EditForm Model="newCategory" OnValidSubmit="Add" FormName="categoryForm" class="row g-2 mb-4">
     <DataAnnotationsValidator />
     <div class="col-md-6">
@@ -36,6 +39,7 @@
 @code {
     private List<Category> categories = new();
     private Category newCategory = new();
+    private string? error;
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,6 +48,7 @@
 
     private async Task Add()
     {
+        error = null;
         await CategoryService.AddAsync(newCategory);
         newCategory = new Category();
         categories = await CategoryService.GetAllAsync();
@@ -51,7 +56,15 @@
 
     private async Task Delete(int id)
     {
-        await CategoryService.DeleteAsync(id);
-        categories = await CategoryService.GetAllAsync();
+        error = null;
+        try
+        {
+            await CategoryService.DeleteAsync(id);
+            categories = await CategoryService.GetAllAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            error = ex.Message;
+        }
     }
 }

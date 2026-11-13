@@ -17,6 +17,20 @@ namespace BlazorFinalProject.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
+            modelBuilder.Entity("BlazorFinalProject.Models.Budget", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("MonthlyLimit")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Budgets");
+                });
+
             modelBuilder.Entity("BlazorFinalProject.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -98,7 +112,7 @@ namespace BlazorFinalProject.Migrations
                     b.HasOne("BlazorFinalProject.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");

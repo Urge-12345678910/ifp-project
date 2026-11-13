@@ -9,9 +9,14 @@ public class AppDbContext : DbContext
 
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Category> Categories => Set<Category>();
-
+    public DbSet<Budget> Budgets => Set<Budget>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.Entity<Expense>()
+        .HasOne(e => e.Category)
+        .WithMany()
+        .HasForeignKey(e => e.CategoryId)
+        .OnDelete(DeleteBehavior.Restrict);
         builder.Entity<Category>().HasData(
             new Category { Id = 1, Name = "food", Color = "#28a745" },
             new Category { Id = 2, Name = "vehicle", Color = "#007bff" },

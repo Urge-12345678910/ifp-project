@@ -7,10 +7,12 @@ namespace BlazorFinalProject.Services;
 public class ExpenseService : IExpenseService
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
+    private readonly ILogger<ExpenseService> _logger;
 
-    public ExpenseService(IDbContextFactory<AppDbContext> factory)
+    public ExpenseService(IDbContextFactory<AppDbContext> factory, ILogger<ExpenseService> logger)
     {
         _factory = factory;
+        _logger = logger;
     }
 
     public async Task<List<Expense>> GetAllAsync(int? categoryId = null, string? search = null)
@@ -33,28 +35,33 @@ public class ExpenseService : IExpenseService
         return await db.Expenses.FindAsync(id);
     }
 
-    public async Task AddAsync(Expense expense)
+     private async Task SaveAsync(Func<AppDbContext, Task> action)
     {
-        await using var db = _factory.CreateDbContext();
-        db.Expenses.Add(expense);
-        await db.SaveChangesAsync();
+        try
+        {
+            await using var db = _factory.CreateDbContext();
+            await action(db);
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database save failed");
+            throw new InvalidOperationException("Could not save changes. Please try again.");
+        }
     }
 
-    public async Task UpdateAsync(Expense expense)
-    {
-        await using var db = _factory.CreateDbContext();
-        db.Expenses.Update(expense);
-        await db.SaveChangesAsync();
-    }
+    public Task AddAsync(Expense expense) =>
+        SaveAsync(db => { db.Expenses.Add(expense); return Task.CompletedTask; });
 
-    public async Task DeleteAsync(int id)
-    {
-        await using var db = _factory.CreateDbContext();
-        var expense = await db.Expenses.FindAsync(id);
-        if (expense is null) return;
-        db.Expenses.Remove(expense);
-        await db.SaveChangesAsync();
-    }
+    public Task UpdateAsync(Expense expense) =>
+        SaveAsync(db => { db.Expenses.Update(expense); return Task.CompletedTask; });
+
+    public Task DeleteAsync(int id) =>
+        SaveAsync(async db =>
+        {
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense is not null) db.Expenses.Remove(expense);
+        });
 
     public async Task<decimal> GetMonthTotalAsync(DateTime month)
     {

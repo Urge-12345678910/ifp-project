@@ -1,0 +1,47 @@
+@page "/budget"
+@rendermode InteractiveServer
+@inject IBudgetService BudgetService
+@inject IExpenseService ExpenseService
+
+<PageTitle>Budget</PageTitle>
+
+<h3 class="mb-4">Monthly budget</h3>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <label class="form-label">Monthly limit</label>
+        <div class="input-group mb-3">
+            <input type="number" class="form-control" @bind="limit" />
+            <button class="btn btn-primary" @onclick="Save">Save</button>
+        </div>
+        @if (saved)
+        {
+            <div class="text-success">Saved</div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="mb-3">This month</h5>
+        <BudgetBar Spent="spent" Limit="limit" />
+    </div>
+</div>
+
+@code {
+    private decimal limit;
+    private decimal spent;
+    private bool saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        limit = await BudgetService.GetLimitAsync();
+        spent = await ExpenseService.GetMonthTotalAsync(DateTime.Today);
+    }
+
+    private async Task Save()
+    {
+        await BudgetService.SetLimitAsync(limit);
+        saved = true;
+    }
+}

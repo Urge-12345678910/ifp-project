@@ -25,7 +25,10 @@
         </select>
     </div>
 </div>
-
+@if (error is not null)
+{
+    <div class="alert alert-danger">@error</div>
+}
 @if (items is null)
 {
     <p>download...</p>
@@ -71,6 +74,7 @@ else
     private List<Category> categories = new();
     private string? search;
     private int? categoryId;
+    private string? error;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,7 +89,15 @@ else
 
     private async Task Delete(int id)
     {
-        await ExpenseService.DeleteAsync(id);
-        await Load();
+        error = null;
+        try
+        {
+            await ExpenseService.DeleteAsync(id);
+            await Load();
+        }
+        catch (InvalidOperationException ex)
+        {
+            error = ex.Message;
+        }
     }
 }

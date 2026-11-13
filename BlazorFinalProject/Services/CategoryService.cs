@@ -26,7 +26,9 @@ public class CategoryService : ICategoryService
         await db.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(int id)
+   public async Task DeleteAsync(int id)
+{
+    try
     {
         await using var db = _factory.CreateDbContext();
         var category = await db.Categories.FindAsync(id);
@@ -34,4 +36,9 @@ public class CategoryService : ICategoryService
         db.Categories.Remove(category);
         await db.SaveChangesAsync();
     }
+    catch (DbUpdateException)
+    {
+        throw new InvalidOperationException("This category is used by expenses and cannot be deleted.");
+    }
+}
 }

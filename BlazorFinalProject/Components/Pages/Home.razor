@@ -1,7 +1,65 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@inject IExpenseService ExpenseService
+@inject IBudgetService BudgetService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Expense tracking</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1 class="mb-4">Expense tracking</h1>
 
-Welcome to your new app.
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Spent this month</div>
+                <div class="display-5 fw-bold">@monthTotal.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted mb-2">Monthly budget</div>
+                <BudgetBar Spent="monthTotal" Limit="limit" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="mb-3">Recent expenses</h5>
+        @if (recent.Count == 0)
+        {
+            <p class="text-muted mb-0">No expenses yet.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var e in recent)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge me-2" style="background-color:@e.Category?.Color">&nbsp;</span>
+                            @e.Title
+                        </span>
+                        <strong>@e.Amount.ToString("N2")</strong>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    private decimal monthTotal;
+    private decimal limit;
+    private List<Expense> recent = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        monthTotal = await ExpenseService.GetMonthTotalAsync(DateTime.Today);
+        limit = await BudgetService.GetLimitAsync();
+        recent = (await ExpenseService.GetAllAsync()).Take(5).ToList();
+    }
+}

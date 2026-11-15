@@ -28,17 +28,16 @@ public class CategoryService : ICategoryService
 
    public async Task DeleteAsync(int id)
 {
-    try
-    {
-        await using var db = _factory.CreateDbContext();
-        var category = await db.Categories.FindAsync(id);
-        if (category is null) return;
-        db.Categories.Remove(category);
-        await db.SaveChangesAsync();
-    }
-    catch (DbUpdateException)
-    {
+    await using var db = _factory.CreateDbContext();
+
+    var inUse = await db.Expenses.AnyAsync(e => e.CategoryId == id);
+    if (inUse)
         throw new InvalidOperationException("This category is used by expenses and cannot be deleted.");
-    }
+
+    var category = await db.Categories.FindAsync(id);
+    if (category is null) return;
+
+    db.Categories.Remove(category);
+    await db.SaveChangesAsync();
 }
 }

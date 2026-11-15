@@ -1,0 +1,26 @@
+<EditForm Model="model" OnValidSubmit="Submit" FormName="categoryForm" class="row g-2 mb-4">
+    <DataAnnotationsValidator />
+    <div class="col-md-6">
+        <InputText class="form-control" placeholder="Name" @bind-Value="model.Name" />
+    </div>
+    <div class="col-md-3">
+        <InputText type="color" class="form-control form-control-color" @bind-Value="model.Color" />
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary w-100" type="submit">Add</button>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+@code {
+    [Parameter] public EventCallback<Category> OnAdded { get; set; }
+
+    private Category model = new();
+
+    private async Task Submit()
+    {
+        var created = model;
+        model = new Category();
+        await OnAdded.InvokeAsync(created);
+    }
+}

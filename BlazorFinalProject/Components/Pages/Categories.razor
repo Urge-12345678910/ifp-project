@@ -4,24 +4,18 @@
 
 <PageTitle>Categories</PageTitle>
 
-<h3>Categories</h3>
+<h3 class="mb-4">Categories</h3>
+
 @if (error is not null)
 {
     <div class="alert alert-danger">@error</div>
 }
-<EditForm Model="newCategory" OnValidSubmit="Add" FormName="categoryForm" class="row g-2 mb-4">
-    <DataAnnotationsValidator />
-    <div class="col-md-6">
-        <InputText class="form-control" placeholder="Название" @bind-Value="newCategory.Name" />
+
+<div class="card mb-4">
+    <div class="card-body pb-0">
+        <CategoryForm OnAdded="Add" />
     </div>
-    <div class="col-md-3">
-        <InputText type="color" class="form-control form-control-color" @bind-Value="newCategory.Color" />
-    </div>
-    <div class="col-md-3">
-        <button class="btn btn-primary w-100" type="submit">add</button>
-    </div>
-    <ValidationSummary />
-</EditForm>
+</div>
 
 <ul class="list-group">
     @foreach (var c in categories)
@@ -31,14 +25,13 @@
                 <span class="badge me-2" style="background-color:@c.Color">&nbsp;</span>
                 @c.Name
             </span>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(c.Id)">delete</button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(c.Id)">Delete</button>
         </li>
     }
 </ul>
 
 @code {
     private List<Category> categories = new();
-    private Category newCategory = new();
     private string? error;
 
     protected override async Task OnInitializedAsync()
@@ -46,12 +39,18 @@
         categories = await CategoryService.GetAllAsync();
     }
 
-    private async Task Add()
+    private async Task Add(Category category)
     {
         error = null;
-        await CategoryService.AddAsync(newCategory);
-        newCategory = new Category();
-        categories = await CategoryService.GetAllAsync();
+        try
+        {
+            await CategoryService.AddAsync(category);
+            categories = await CategoryService.GetAllAsync();
+        }
+        catch (Exception)
+        {
+            error = "Could not add the category.";
+        }
     }
 
     private async Task Delete(int id)

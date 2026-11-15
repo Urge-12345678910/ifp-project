@@ -1,3 +1,4 @@
+# ifp-project
 # Expense Tracker
 
 Web application for personal expense tracking. Built with Blazor Server (.NET), Entity Framework Core and SQLite.
@@ -41,6 +42,6 @@ The database is created automatically on first start.
 3. Set a monthly limit on the Budget page
 4. Open Statistics to see spending by category
 
-
 ## Authors
 Adil Daulet, Khaknazar Mursalim
+

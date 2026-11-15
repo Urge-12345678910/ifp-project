@@ -1,7 +1,8 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @inject IExpenseService ExpenseService
-@inject IBudgetService BudgetService
+@inject BudgetState State
+@implements IDisposable
 
 <PageTitle>Expense tracking</PageTitle>
 
@@ -12,7 +13,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="text-muted">Spent this month</div>
-                <div class="display-5 fw-bold">@monthTotal.ToString("N2")</div>
+                <div class="display-5 fw-bold">@State.Spent.ToString("N2")</div>
             </div>
         </div>
     </div>
@@ -20,7 +21,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="text-muted mb-2">Monthly budget</div>
-                <BudgetBar Spent="monthTotal" Limit="limit" />
+                <BudgetBar Spent="State.Spent" Limit="State.Limit" />
             </div>
         </div>
     </div>
@@ -52,14 +53,16 @@
 </div>
 
 @code {
-    private decimal monthTotal;
-    private decimal limit;
     private List<Expense> recent = new();
 
     protected override async Task OnInitializedAsync()
     {
-        monthTotal = await ExpenseService.GetMonthTotalAsync(DateTime.Today);
-        limit = await BudgetService.GetLimitAsync();
+        State.OnChange += Update;
+        await State.RefreshAsync();
         recent = (await ExpenseService.GetAllAsync()).Take(5).ToList();
     }
+
+    private void Update() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.OnChange -= Update;
 }

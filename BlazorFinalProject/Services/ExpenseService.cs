@@ -18,7 +18,7 @@ public class ExpenseService : IExpenseService
     public async Task<List<Expense>> GetAllAsync(int? categoryId = null, string? search = null)
     {
         await using var db = _factory.CreateDbContext();
-        var query = db.Expenses.Include(e => e.Category).AsQueryable();
+        var query = db.Expenses.AsNoTracking().Include(e => e.Category).AsQueryable();
 
         if (categoryId.HasValue)
             query = query.Where(e => e.CategoryId == categoryId.Value);

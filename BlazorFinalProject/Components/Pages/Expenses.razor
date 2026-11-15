@@ -2,17 +2,18 @@
 @rendermode InteractiveServer
 @inject IExpenseService ExpenseService
 @inject ICategoryService CategoryService
+@inject BudgetState State
 
 <PageTitle>Expenses</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Expenses</h3>
-    <a class="btn btn-primary" href="expenses/add">add</a>
+    <h3 class="mb-0">Expenses</h3>
+    <a class="btn btn-primary" href="expenses/add">Add</a>
 </div>
 
 <div class="row g-2 mb-3">
     <div class="col-md-6">
-        <input class="form-control" placeholder="Search by name"
+        <input class="form-control" placeholder="Search by title"
                @bind="search" @bind:event="oninput" @bind:after="Load" />
     </div>
     <div class="col-md-6">
@@ -25,47 +26,55 @@
         </select>
     </div>
 </div>
+
 @if (error is not null)
 {
     <div class="alert alert-danger">@error</div>
 }
+
+@if (idToDelete is not null)
+{
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+        <span>Delete this expense?</span>
+        <span>
+            <button class="btn btn-sm btn-danger me-2" @onclick="ConfirmDelete">Yes</button>
+            <button class="btn btn-sm btn-secondary" @onclick="() => idToDelete = null">No</button>
+        </span>
+    </div>
+}
+
 @if (items is null)
 {
-    <p>download...</p>
+    <p>Loading...</p>
 }
 else if (items.Count == 0)
 {
-    <p>no expenses.</p>
+    <p class="text-muted">No expenses yet.</p>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>name</th>
-                    <th>categories</th>
-                    <th>sum</th>
-                    <th>date</th>
+    <div class="card">
+        <div class="card-body">
+            <DataTable Items="items">
+                <Header>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
                     <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var e in items)
-                {
-                    <tr>
-                        <td>@e.Title</td>
-                        <td>@e.Category?.Name</td>
-                        <td>@e.Amount.ToString("N2")</td>
-                        <td>@e.Date.ToShortDateString()</td>
-                        <td class="text-end">
-                            <a class="btn btn-sm btn-outline-secondary" href="expenses/edit/@e.Id">change</a>
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(e.Id)">delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </Header>
+                <Row Context="e">
+                    <td>@e.Title</td>
+                    <td>@e.Category?.Name</td>
+                    <td>@e.Amount.ToString("N2")</td>
+                    <td>@e.Date.ToShortDateString()</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" href="expenses/edit/@e.Id">Edit</a>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => idToDelete = e.Id">Delete</button>
+                    </td>
+                </Row>
+            </DataTable>
+        </div>
     </div>
 }
 
@@ -75,6 +84,7 @@ else
     private string? search;
     private int? categoryId;
     private string? error;
+    private int? idToDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,17 +97,19 @@ else
         items = await ExpenseService.GetAllAsync(categoryId, search);
     }
 
-    private async Task Delete(int id)
+    private async Task ConfirmDelete()
     {
         error = null;
         try
         {
-            await ExpenseService.DeleteAsync(id);
+            await ExpenseService.DeleteAsync(idToDelete!.Value);
+            await State.RefreshAsync();
             await Load();
         }
         catch (InvalidOperationException ex)
         {
             error = ex.Message;
         }
+        idToDelete = null;
     }
 }

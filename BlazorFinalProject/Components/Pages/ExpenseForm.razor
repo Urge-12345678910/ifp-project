@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @inject IExpenseService ExpenseService
 @inject ICategoryService CategoryService
+@inject BudgetState State
 @inject NavigationManager Navigation
 
 <PageTitle>Expense</PageTitle>
@@ -50,8 +51,9 @@ else
         <a class="btn btn-secondary" href="expenses">cancel</a>
     </EditForm>
 }
-
+@if (error is not null) { <div class="alert alert-danger">@error</div> }
 @code {
+    private string? error;
     [Parameter] public int? Id { get; set; }
 
     private Expense? model;
@@ -67,12 +69,20 @@ else
     }
 
     private async Task Save()
+{
+    try
     {
         if (model!.Id == 0)
             await ExpenseService.AddAsync(model);
         else
             await ExpenseService.UpdateAsync(model);
 
+        await State.RefreshAsync();
         Navigation.NavigateTo("expenses");
     }
+    catch (InvalidOperationException ex)
+    {
+        error = ex.Message;
+    }
+}
 }

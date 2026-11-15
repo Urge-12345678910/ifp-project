@@ -1,7 +1,7 @@
 @page "/budget"
 @rendermode InteractiveServer
-@inject IBudgetService BudgetService
-@inject IExpenseService ExpenseService
+@inject BudgetState State
+@implements IDisposable
 
 <PageTitle>Budget</PageTitle>
 
@@ -11,7 +11,7 @@
     <div class="card-body">
         <label class="form-label">Monthly limit</label>
         <div class="input-group mb-3">
-            <input type="number" class="form-control" @bind="limit" />
+            <input type="number" class="form-control" min="0" max="10000000" @bind="limit" />
             <button class="btn btn-primary" @onclick="Save">Save</button>
         </div>
         @if (saved)
@@ -24,24 +24,28 @@
 <div class="card">
     <div class="card-body">
         <h5 class="mb-3">This month</h5>
-        <BudgetBar Spent="spent" Limit="limit" />
+        <BudgetBar Spent="State.Spent" Limit="State.Limit" />
     </div>
 </div>
 
 @code {
     private decimal limit;
-    private decimal spent;
     private bool saved;
 
     protected override async Task OnInitializedAsync()
     {
-        limit = await BudgetService.GetLimitAsync();
-        spent = await ExpenseService.GetMonthTotalAsync(DateTime.Today);
+        State.OnChange += Update;
+        await State.RefreshAsync();
+        limit = State.Limit;
     }
 
     private async Task Save()
     {
-        await BudgetService.SetLimitAsync(limit);
+        await State.SetLimitAsync(limit);
         saved = true;
     }
+
+    private void Update() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.OnChange -= Update;
 }

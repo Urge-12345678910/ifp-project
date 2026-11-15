@@ -30,6 +30,10 @@ mono_crash.*
 bin/x64/
 obj/x64/
 
+expenses.db
+expenses.db-shm
+expenses.db-wal
+
 [Dd]ebug/x86/
 [Dd]ebugPublic/x86/
 [Rr]elease/x86/

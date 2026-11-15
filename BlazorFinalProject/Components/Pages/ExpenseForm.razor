@@ -5,9 +5,9 @@
 @inject ICategoryService CategoryService
 @inject NavigationManager Navigation
 
-<PageTitle>Расход</PageTitle>
+<PageTitle>Expense</PageTitle>
 
-<h3>@(Id is null ? "Новый расход" : "Редактирование расхода")</h3>
+<h3>@(Id is null ? "new expenses" : "Expense editing")</h3>
 
 @if (model is null)
 {
@@ -42,7 +42,7 @@ else
             </InputSelect>
         </div>
         <div class="mb-3">
-            <label class="form-label">Заметка</label>
+            <label class="form-label">Note</label>
             <InputTextArea class="form-control" @bind-Value="model.Note" />
         </div>
 
